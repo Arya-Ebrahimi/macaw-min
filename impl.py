@@ -215,6 +215,8 @@ def run(args):
         policy_opt.zero_grad()
         vf_opt.step()
         vf_opt.zero_grad()
+        qf_opt.step()
+        qf_opt.zero_grad()
 
 
 if __name__ == "__main__":

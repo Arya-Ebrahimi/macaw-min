@@ -12,7 +12,7 @@ def qf_loss_on_batch(qf, batch, inner: bool = False):
     action_values = qf(batch['obs'], batch['actions'])
     mc_returns = batch['mc_rewards']
 
-    return (mc_returns - action_values).pow(2).mean()
+    return (action_values - mc_returns).pow(2).mean()
 
 def policy_loss_on_batch(policy, vf, qf, batch, adv_coef: float, inner: bool = False):
     with torch.no_grad():
@@ -30,7 +30,7 @@ def policy_loss_on_batch(policy, vf, qf, batch, adv_coef: float, inner: bool = F
     action_distribution = D.Normal(action_mu, action_sigma)
     action_log_probs = action_distribution.log_prob(batch["actions"]).sum(-1)
 
-    print(action_log_probs.shape)
+    # print(action_log_probs.shape)
     losses = -(action_log_probs * weights)
 
     adv_prediction_loss = None
