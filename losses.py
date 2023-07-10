@@ -8,6 +8,11 @@ def vf_loss_on_batch(vf, batch, inner: bool = False):
 
     return (value_estimates - targets).pow(2).mean()
 
+def qf_loss_on_batch(qf, batch, inner: bool = False):
+    action_values = qf(batch['obs'], batch['actions'])
+    mc_returns = batch['mc_rewards']
+
+    return (mc_returns - action_values).pow(2).mean()
 
 def policy_loss_on_batch(policy, vf, batch, adv_coef: float, inner: bool = False):
     with torch.no_grad():
