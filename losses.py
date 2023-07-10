@@ -14,10 +14,10 @@ def qf_loss_on_batch(qf, batch, inner: bool = False):
 
     return (mc_returns - action_values).pow(2).mean()
 
-def policy_loss_on_batch(policy, vf, batch, adv_coef: float, inner: bool = False):
+def policy_loss_on_batch(policy, vf, qf, batch, adv_coef: float, inner: bool = False):
     with torch.no_grad():
         value_estimates = vf(batch["obs"])
-        action_value_estimates = batch["mc_rewards"]
+        action_value_estimates = qf(["obs"])
 
         advantages = (action_value_estimates - value_estimates).squeeze(-1)
         normalized_advantages = (advantages - advantages.mean()) / advantages.std()

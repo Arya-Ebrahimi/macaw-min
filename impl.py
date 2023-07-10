@@ -183,6 +183,7 @@ def run(args):
 
             # Adapt policy using adapted value function
             adapted_vf = f_vf
+            adapted_qf = f_qf
             opt = O.SGD([{"params": p, "lr": None} for p in policy.parameters()])
             with higher.innerloop_ctx(
                 policy, opt, override={"lr": policy_lrs}, copy_initial_weights=False
@@ -190,6 +191,7 @@ def run(args):
                 loss = policy_loss_on_batch(
                     f_policy,
                     adapted_vf,
+                    adapted_qf,
                     inner_batch,
                     args.advantage_head_coef,
                     inner=True,
