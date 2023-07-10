@@ -17,8 +17,9 @@ def qf_loss_on_batch(qf, batch, inner: bool = False):
 def policy_loss_on_batch(policy, vf, qf, batch, adv_coef: float, inner: bool = False):
     with torch.no_grad():
         value_estimates = vf(batch["obs"])
-        action_value_estimates = qf(["obs"])
-
+        action_value_estimates = qf(batch["obs"], batch["actions"])
+        # print(action_value_estimates.shape)
+        # print(action_value_estimates.shape)
         advantages = (action_value_estimates - value_estimates).squeeze(-1)
         normalized_advantages = (advantages - advantages.mean()) / advantages.std()
         weights = normalized_advantages.clamp(max=3).exp()
@@ -29,6 +30,7 @@ def policy_loss_on_batch(policy, vf, qf, batch, adv_coef: float, inner: bool = F
     action_distribution = D.Normal(action_mu, action_sigma)
     action_log_probs = action_distribution.log_prob(batch["actions"]).sum(-1)
 
+    print(action_log_probs.shape)
     losses = -(action_log_probs * weights)
 
     adv_prediction_loss = None

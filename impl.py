@@ -69,7 +69,7 @@ def build_networks_and_buffers(args, env, task_config):
     ).to(args.device)
 
     q_function = MLP(
-        [obs_dim] + [args.net_width] * args.net_depth + [action_dim],
+        [obs_dim + action_dim] + [args.net_width] * args.net_depth + [1],
         w_linear=args.weight_transform,
     ).to(args.device)
 
@@ -178,7 +178,7 @@ def run(args):
                 diff_action_opt.step(loss)
 
                 meta_qf_loss = qf_loss_on_batch(f_qf, outer_batch)
-                total_qf_loss = meta_vf_loss / len(task_config.train_tasks)
+                total_qf_loss = meta_qf_loss / len(task_config.train_tasks)
                 total_qf_loss.backward()
 
             # Adapt policy using adapted value function
@@ -200,7 +200,7 @@ def run(args):
                 diff_policy_opt.step(loss)
 
                 meta_policy_loss = policy_loss_on_batch(
-                    f_policy, adapted_vf, outer_batch, args.advantage_head_coef
+                    f_policy, adapted_vf, adapted_qf, outer_batch, args.advantage_head_coef
                 )
 
                 (meta_policy_loss / len(task_config.train_tasks)).backward()
