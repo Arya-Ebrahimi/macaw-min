@@ -68,6 +68,11 @@ def build_networks_and_buffers(args, env, task_config):
         w_linear=args.weight_transform,
     ).to(args.device)
 
+    q_function = MLP(
+        [obs_dim] + [args.net_width] * args.net_depth + [action_dim],
+        w_linear=args.weight_transform,
+    ).to(args.device)
+
     vf = MLP(
         [obs_dim] + [args.net_width] * args.net_depth + [1],
         w_linear=args.weight_transform,
@@ -89,7 +94,7 @@ def build_networks_and_buffers(args, env, task_config):
         for i, task in enumerate(task_config.train_tasks)
     ]
 
-    return policy, vf, buffers
+    return policy, vf, buffers, q_function
 
 
 def get_env(args, task_config):
@@ -129,7 +134,7 @@ def run(args):
         )
 
     env = get_env(args, task_config)
-    policy, vf, task_buffers = build_networks_and_buffers(args, env, task_config)
+    policy, vf, task_buffers, q_function = build_networks_and_buffers(args, env, task_config)
     policy_opt, vf_opt, policy_lrs, vf_lrs = get_opts_and_lrs(args, policy, vf)
 
     for train_step_idx in count(start=1):
