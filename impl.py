@@ -114,7 +114,7 @@ def get_env(args, task_config):
 def get_opts_and_lrs(args, policy, vf, qf):
     policy_opt = O.Adam(policy.parameters(), lr=args.outer_policy_lr)
     vf_opt = O.Adam(vf.parameters(), lr=args.outer_value_lr)
-    qf_opt = O.Adam(qf.parameters(), lr=args.outer_v)
+    qf_opt = O.Adam(qf.parameters(), lr=args.outer_action_lr)
     policy_lrs = [
         torch.nn.Parameter(torch.tensor(args.inner_policy_lr).to(args.device))
         for p in policy.parameters()
@@ -124,7 +124,12 @@ def get_opts_and_lrs(args, policy, vf, qf):
         for p in vf.parameters()
     ]
 
-    return policy_opt, vf_opt, policy_lrs, vf_lrs
+    qf_lrs = [
+        torch.nn.Parameter(torch.tensor(args.inner_action_lr).to(args.device))
+        for p in qf.parameters()
+    ]
+
+    return policy_opt, vf_opt, qf_opt, policy_lrs, vf_lrs, qf_lrs
 
 
 @hydra.main(config_path="config", config_name="config.yaml")
@@ -136,7 +141,7 @@ def run(args):
 
     env = get_env(args, task_config)
     policy, vf, task_buffers, q_function = build_networks_and_buffers(args, env, task_config)
-    policy_opt, vf_opt, policy_lrs, vf_lrs = get_opts_and_lrs(args, policy, vf)
+    policy_opt, vf_opt, qf_opt, policy_lrs, vf_lrs, qf_lrs = get_opts_and_lrs(args, policy, vf, q_function)
 
     for train_step_idx in count(start=1):
         if train_step_idx % args.rollout_interval == 0:
@@ -167,8 +172,14 @@ def run(args):
             # Adapt action value function
             opt = O.SGD([{"params": p, "lr": None} for p in q_function.parameters()])
             with higher.innerloop_ctx(
-                q_function, opt, override={"lr":}
-            )
+                q_function, opt, override={"lr": qf_lrs}, copy_initial_weights=False
+            ) as (f_qf, diff_action_opt):
+                loss = qf_loss_on_batch(f_qf, inner_batch, inner=True)
+                diff_action_opt.step(loss)
+
+                meta_qf_loss = qf_loss_on_batch(f_qf, outer_batch)
+                total_qf_loss = meta_vf_loss / len(task_config.train_tasks)
+                total_qf_loss.backward()
 
             # Adapt policy using adapted value function
             adapted_vf = f_vf
