@@ -14,7 +14,7 @@ from itertools import count
 import logging
 
 from utils import Experience
-from losses import policy_loss_on_batch, vf_loss_on_batch
+from losses import policy_loss_on_batch, vf_loss_on_batch, qf_loss_on_batch
 
 #test colab
 
