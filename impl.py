@@ -111,9 +111,10 @@ def get_env(args, task_config):
     return HalfCheetahDirEnv(tasks, include_goal=False)
 
 
-def get_opts_and_lrs(args, policy, vf):
+def get_opts_and_lrs(args, policy, vf, qf):
     policy_opt = O.Adam(policy.parameters(), lr=args.outer_policy_lr)
     vf_opt = O.Adam(vf.parameters(), lr=args.outer_value_lr)
+    qf_opt = O.Adam(qf.parameters(), lr=args.outer_v)
     policy_lrs = [
         torch.nn.Parameter(torch.tensor(args.inner_policy_lr).to(args.device))
         for p in policy.parameters()
@@ -162,6 +163,12 @@ def run(args):
                 meta_vf_loss = vf_loss_on_batch(f_vf, outer_batch)
                 total_vf_loss = meta_vf_loss / len(task_config.train_tasks)
                 total_vf_loss.backward()
+            
+            # Adapt action value function
+            opt = O.SGD([{"params": p, "lr": None} for p in q_function.parameters()])
+            with higher.innerloop_ctx(
+                q_function, opt, override={"lr":}
+            )
 
             # Adapt policy using adapted value function
             adapted_vf = f_vf
