@@ -85,7 +85,7 @@ class MLP(nn.Module):
         if self._head and acts is not None:
             h = self.pre_seq(x)
             head_input = torch.cat((h, acts), -1)
-            return torch.nan_to_num(self._final_activation(self.post_seq(h))), self.head_seq(head_input)
+            return torch.nan_to_num(self._final_activation(self.post_seq(h))), torch.nan_to_num(self.head_seq(head_input))
         elif acts is not None:
             head_input = torch.cat((x, acts), -1)
             return self._final_activation(self.seq(head_input))

@@ -211,6 +211,8 @@ def run(args):
                     LOG.info(f"Task {train_task_idx} reward: {adapted_reward}")
 
         # Update the policy/value function
+
+        torch.nn.utils.clip_grad_norm_(policy.parameters(), 5)
         policy_opt.step()
         policy_opt.zero_grad()
         vf_opt.step()
