@@ -16,6 +16,9 @@ import logging
 from utils import Experience
 from losses import policy_loss_on_batch, vf_loss_on_batch, qf_loss_on_batch
 
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter()
+
 #test colab
 
 LOG = logging.getLogger(__name__)
@@ -209,6 +212,7 @@ def run(args):
                 if train_step_idx % args.rollout_interval == 0:
                     adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env)
                     LOG.info(f"Task {train_task_idx} reward: {adapted_reward}")
+                    writer.add_scalar(f"adapted_reward/task_{train_task_idx}", adapted_reward, train_step_idx)
 
         # Update the policy/value function
 
