@@ -2,11 +2,11 @@ import torch
 import torch.distributions as D
 import torch.nn.functional as F
 
-def vf_loss_on_batch(vf, batch, inner: bool = False):
+def vf_loss_on_batch(vf, qf, batch, inner: bool = False):
     value_estimates = vf(batch["obs"])
-    targets = batch["mc_rewards"]
-
-    return (value_estimates - targets).pow(2).mean()
+    with torch.no_grad():
+        action_values = qf(batch['obs'], batch['actions'])
+    return (value_estimates - action_values).pow(2).mean()
 
 def qf_loss_on_batch(qf, batch, inner: bool = False):
     action_values = qf(batch['obs'], batch['actions'])

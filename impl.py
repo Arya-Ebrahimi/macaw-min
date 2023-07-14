@@ -160,18 +160,6 @@ def run(args):
                 args.outer_batch_size, return_dict=True, device=args.device
             )
 
-            # Adapt value function
-            opt = O.SGD([{"params": p, "lr": None} for p in vf.parameters()])
-            with higher.innerloop_ctx(
-                vf, opt, override={"lr": vf_lrs}, copy_initial_weights=False
-            ) as (f_vf, diff_value_opt):
-                loss = vf_loss_on_batch(f_vf, inner_batch, inner=True)
-                diff_value_opt.step(loss)
-
-                meta_vf_loss = vf_loss_on_batch(f_vf, outer_batch)
-                total_vf_loss = meta_vf_loss / len(task_config.train_tasks)
-                total_vf_loss.backward()
-            
             # Adapt action value function
             opt = O.SGD([{"params": p, "lr": None} for p in q_function.parameters()])
             with higher.innerloop_ctx(
@@ -183,6 +171,20 @@ def run(args):
                 meta_qf_loss = qf_loss_on_batch(f_qf, outer_batch)
                 total_qf_loss = meta_qf_loss / len(task_config.train_tasks)
                 total_qf_loss.backward()
+
+            # Adapt value function
+            opt = O.SGD([{"params": p, "lr": None} for p in vf.parameters()])
+            with higher.innerloop_ctx(
+                vf, opt, override={"lr": vf_lrs}, copy_initial_weights=False
+            ) as (f_vf, diff_value_opt):
+                loss = vf_loss_on_batch(f_vf, q_function, inner_batch, inner=True)
+                diff_value_opt.step(loss)
+
+                meta_vf_loss = vf_loss_on_batch(f_vf, q_function, outer_batch)
+                total_vf_loss = meta_vf_loss / len(task_config.train_tasks)
+                total_vf_loss.backward()
+            
+            
 
             # Adapt policy using adapted value function
             adapted_vf = f_vf
