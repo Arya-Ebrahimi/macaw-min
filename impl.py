@@ -229,6 +229,12 @@ def run(args):
         qf_opt.step()
         qf_opt.zero_grad()
 
+        if train_step_idx == 20000:
+            print('saving models')
+            torch.save(policy.state_dict(), '/content/macaw-min/models/policy.pt')
+            torch.save(vf.state_dict(), '/content/macaw-min/models/vf.pt')
+            torch.save(q_function.state_dict(), '/content/macaw-min/models/qf.pt')
+
 
 if __name__ == "__main__":
     run()
