@@ -1,4 +1,7 @@
+__pycache__
 mujoco210
 outputs
 mujoco
 macaw_offline_data
+runs
+data
