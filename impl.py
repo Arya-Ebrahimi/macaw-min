@@ -17,7 +17,6 @@ from utils import Experience
 from losses import policy_loss_on_batch, vf_loss_on_batch, qf_loss_on_batch
 
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter()
 
 #test colab
 
@@ -141,6 +140,9 @@ def run(args):
         task_config = json.load(
             f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
         )
+        
+    if args.tensorboard:
+        writer = SummaryWriter()
 
     env = get_env(args, task_config)
     policy, vf, task_buffers, q_function = build_networks_and_buffers(args, env, task_config)
@@ -214,7 +216,8 @@ def run(args):
                 if train_step_idx % args.rollout_interval == 0:
                     adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env)
                     LOG.info(f"Task {train_task_idx} reward: {adapted_reward}")
-                    writer.add_scalar(f"adapted_reward/task_{train_task_idx}", adapted_reward, train_step_idx)
+                    if args.tensorboard:
+                        writer.add_scalar(f"adapted_reward/task_{train_task_idx}", adapted_reward, train_step_idx)
 
         # Update the policy/value function
 
