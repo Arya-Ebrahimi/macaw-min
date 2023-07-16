@@ -12,6 +12,7 @@ from typing import List
 import higher
 from itertools import count
 import logging
+import gym
 
 from utils import Experience
 from losses import policy_loss_on_batch, vf_loss_on_batch, qf_loss_on_batch
@@ -58,7 +59,7 @@ def rollout_policy(policy: MLP, env, render: bool = False) -> List[Experience]:
     return trajectory, total_reward, success
 
 
-def build_networks_and_buffers(args, env, task_config):
+def build_networks_and_buffers(args, env, task_config, is_train=True):
     obs_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
@@ -80,9 +81,15 @@ def build_networks_and_buffers(args, env, task_config):
         w_linear=args.weight_transform,
     ).to(args.device)
 
+    if is_train:
+        bp = task_config.train_buffer_paths
+    else:
+        bp = task_config.test_buffer_paths
+    
     buffer_paths = [
-        task_config.train_buffer_paths.format(idx) for idx in task_config.train_tasks
+        bp.format(idx) for idx in task_config.train_tasks
     ]
+    
 
     buffers = [
         ReplayBuffer(
@@ -136,10 +143,17 @@ def get_opts_and_lrs(args, policy, vf, qf):
 
 @hydra.main(config_path="config", config_name="config.yaml")
 def run(args):
-    with open(f"{get_original_cwd()}/{args.task_config}", "r") as f:
-        task_config = json.load(
-            f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
-        )
+    
+    if args.colab:
+        with open(f"{get_original_cwd()}/{args.colab_task_config}", "r") as f:
+            task_config = json.load(
+                f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
+            )
+    else:
+        with open(f"{get_original_cwd()}/{args.task_config}", "r") as f:
+            task_config = json.load(
+                f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
+            )
         
     if args.tensorboard:
         writer = SummaryWriter()
@@ -214,7 +228,7 @@ def run(args):
 
                 # Sample adapted policy trajectory
                 if train_step_idx % args.rollout_interval == 0:
-                    adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env)
+                    adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env, render=True)
                     LOG.info(f"Task {train_task_idx} reward: {adapted_reward}")
                     if args.tensorboard:
                         writer.add_scalar(f"adapted_reward/task_{train_task_idx}", adapted_reward, train_step_idx)
