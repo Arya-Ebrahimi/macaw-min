@@ -5,5 +5,9 @@
     "train_tasks": [0,1],
     "test_tasks": [0,1],
     "train_buffer_paths": "/home/arya/arya/dl/macaw-min/macaw_offline_data/cheetah_dir/buffers_cheetah_dir_train_{}_sub_task_0.hdf5",
-    "test_buffer_paths": "/home/arya/arya/dl/macaw-min/macaw_offline_data/cheetah_dir/buffers_cheetah_dir_train_{}_sub_task_0.hdf5"
+    "test_buffer_paths": "/home/arya/arya/dl/macaw-min/macaw_offline_data/cheetah_dir/buffers_cheetah_dir_train_{}_sub_task_0.hdf5",
+    "policy":"/home/arya/arya/dl/macaw-min/models/policy.pt",
+    "vf":"/home/arya/arya/dl/macaw-min/models/vf.pt",
+    "qf":"/home/arya/arya/dl/macaw-min/models/qf.pt"
+
 }
