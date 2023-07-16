@@ -52,7 +52,7 @@ def rollout_policy(policy: MLP, env, render: bool = False) -> List[Experience]:
         state = next_state
         total_reward += reward
         episode_t += 1
-        if done:
+        if episode_t >= env._max_episode_steps or done:
             break
     
     return trajectory, total_reward, success

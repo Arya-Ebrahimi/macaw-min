@@ -106,16 +106,19 @@ def build_networks_and_buffers(args, env, task_config, is_train=True):
     return policy, vf, buffers, q_function
 
 
-def get_env(args, task_config):
-    tasks = []
-    for task_idx in range(task_config.total_tasks):
-        with open(task_config.task_paths.format(task_idx), "rb") as f:
-            task_info = pickle.load(f)
-            assert len(task_info) == 1, f"Unexpected task info: {task_info}"
-            tasks.append(task_info[0])
+def get_env(args, task_config, t=False):
+    if t:
+        tasks=[{'direction': 1}]
+    else:
+        tasks = []
+        for task_idx in range(task_config.total_tasks):
+            with open(task_config.task_paths.format(task_idx), "rb") as f:
+                task_info = pickle.load(f)
+                assert len(task_info) == 1, f"Unexpected task info: {task_info}"
+                tasks.append(task_info[0])
 
-    if args.advantage_head_coef == 0:
-        args.advantage_head_coef = None
+        if args.advantage_head_coef == 0:
+            args.advantage_head_coef = None
 
     return HalfCheetahDirEnv(tasks, include_goal=False)
 
