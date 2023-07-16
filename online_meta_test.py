@@ -23,7 +23,7 @@ LOG = logging.getLogger(__name__)
 
 EPS_START = 0.99
 EPS_END = 0.05
-EPS_DECAY = 1000
+EPS_DECAY = 2000
 
 
 def rollout_policy(policy: MLP, env, render: bool = False) -> List[Experience]:
@@ -87,7 +87,8 @@ def generate_episode(env, policy, num_episodes=1, random=False):
                     np_action = np_action.clip(min=env.action_space.low, max=env.action_space.high)
                 
             next_state, reward, done, info_dict = env.step(np_action)
-            
+            reward = -1 * reward
+
             trajectory.append(Experience(state, np_action, next_state, reward, done))
             episode_t += 1
             if episode_t >= env._max_episode_steps or done:
@@ -172,6 +173,7 @@ def main(args):
             time += 1
             
             next_state, reward, done, info_dict = env.step(action)
+            reward = -1 * reward
             trajectory.append(Experience(state, action, next_state, reward, done))
             
             inner_batch = task_buffer.sample(
