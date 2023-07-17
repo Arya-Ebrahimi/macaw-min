@@ -60,17 +60,23 @@ def rollout_policy(policy: MLP, env, render: bool = False) -> List[Experience]:
 
 @hydra.main(config_path="config", config_name="config.yaml")
 def main(args):
-    with open(f"{get_original_cwd()}/{args.task_config}", "r") as f:
-        task_config = json.load(
-            f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
-        )
+    if args.colab:
+        with open(f"{get_original_cwd()}/{args.colab_task_config}", "r") as f:
+            task_config = json.load(
+                f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
+            )
+    else:
+        with open(f"{get_original_cwd()}/{args.task_config}", "r") as f:
+            task_config = json.load(
+                f, object_hook=lambda d: namedtuple("X", d.keys())(*d.values())
+            )
     
     env = get_env(args, task_config)
     policy, vf, task_buffers, q_function = build_networks_and_buffers(args, env, task_config, is_train=False)
     
-    policy.load_state_dict(torch.load('/home/arya/arya/dl/macaw-min/models/policy.pt'))
-    vf.load_state_dict(torch.load('/home/arya/arya/dl/macaw-min/models/vf.pt'))
-    q_function.load_state_dict(torch.load('/home/arya/arya/dl/macaw-min/models/qf.pt'))
+    policy.load_state_dict(torch.load(task_config.policy))
+    vf.load_state_dict(torch.load(task_config.vf))
+    q_function.load_state_dict(torch.load(task_config.qf))
     
     policy_opt, vf_opt, qf_opt, policy_lrs, vf_lrs, qf_lrs = get_opts_and_lrs(args, policy, vf, q_function)
 
@@ -100,8 +106,8 @@ def main(args):
         policy_opt.zero_grad()
         
         
-    
-    rollout_policy(policy, env, render=True)
+    adapted_trajectory, adapted_reward, success = rollout_policy(policy, env)
+    print(adapted_reward)
 
 if __name__ == '__main__':
     main()
