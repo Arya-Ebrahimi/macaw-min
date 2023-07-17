@@ -4,6 +4,9 @@ outer_action_lr: 1e-5
 inner_policy_lr: 1e-3
 inner_value_lr: 1e-2
 inner_action_lr: 1e-3
+online_meta_test_policy_lr: 1e-5
+online_meta_test_value_lr: 1e-5
+online_meta_test_action_lr: 1e-4
 inner_buffer_size: -1
 outer_buffer_size: -1
 weight_transform: True
@@ -17,6 +20,6 @@ outer_batch_size: 256
 inner_batch_size: 256
 rollout_interval: 100
 tensorboard: False
-save_model: True
+save_model: False
 save_model_step: 60000
-colab: True
+colab: False

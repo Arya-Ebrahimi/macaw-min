@@ -14,7 +14,7 @@ from itertools import count
 import logging
 from utils import Experience
 from losses import policy_loss_on_batch, vf_loss_on_batch, qf_loss_on_batch
-from impl import build_networks_and_buffers, get_opts_and_lrs, get_env
+from impl import build_networks_and_buffers, get_env, rollout_policy
 import gym
 import random
 import math
@@ -26,45 +26,27 @@ EPS_END = 0.05
 EPS_DECAY = 2000
 
 
-def rollout_policy(policy: MLP, env, render: bool = False) -> List[Experience]:
-    trajectory = []
-    
-    state = env.reset()
+def get_opts_and_lrs(args, policy, vf, qf):
+    policy_opt = O.Adam(policy.parameters(), lr=args.online_meta_test_policy_lr)
+    vf_opt = O.Adam(vf.parameters(), lr=args.online_meta_test_value_lr)
+    qf_opt = O.Adam(qf.parameters(), lr=args.online_meta_test_action_lr)
+    policy_lrs = [
+        torch.nn.Parameter(torch.tensor(args.inner_policy_lr).to(args.device))
+        for p in policy.parameters()
+    ]
+    vf_lrs = [
+        torch.nn.Parameter(torch.tensor(args.inner_value_lr).to(args.device))
+        for p in vf.parameters()
+    ]
 
-    if render:
-        env.render()
-    done = False
-    total_reward = 0
-    episode_t = 0
-    success = False
-    policy.eval()
-    current_device = list(policy.parameters())[-1].device
-    while not done:
-        with torch.no_grad():
-            action = policy(torch.tensor(state).to(current_device).float()).squeeze()
+    qf_lrs = [
+        torch.nn.Parameter(torch.tensor(args.inner_action_lr).to(args.device))
+        for p in qf.parameters()
+    ]
 
-            np_action = action.squeeze().cpu().numpy()
-            np_action = np_action.clip(min=env.action_space.low, max=env.action_space.high)
+    return policy_opt, vf_opt, qf_opt, policy_lrs, vf_lrs, qf_lrs
 
-            
-            
-        next_state, reward, done, info_dict = env.step(np_action)
 
-        if "success" in info_dict and info_dict["success"]:
-            success = True
-
-        if render:
-            env.render()
-            
-        trajectory.append(Experience(state, np_action, next_state, reward, done))
-        state = next_state
-        total_reward += reward
-        episode_t += 1
-        if episode_t >= env._max_episode_steps or done:
-            break
-    
-    return trajectory, total_reward, success
-    
 def generate_episode(env, policy, num_episodes=1, random=False):
     
     trajectories = []
@@ -90,6 +72,7 @@ def generate_episode(env, policy, num_episodes=1, random=False):
             reward = -1 * reward
 
             trajectory.append(Experience(state, np_action, next_state, reward, done))
+            state = next_state
             episode_t += 1
             if episode_t >= env._max_episode_steps or done:
                 break
@@ -177,6 +160,10 @@ def main(args):
             next_state, reward, done, info_dict = env.step(action)
             reward = -1 * reward
             trajectory.append(Experience(state, action, next_state, reward, done))
+            
+            
+            state = next_state
+            
             
             inner_batch = task_buffer.sample(
                 args.inner_batch_size, return_dict=True, device=args.device
