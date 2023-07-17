@@ -104,7 +104,7 @@ def select_action(state, time, env, policy):
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * time / EPS_DECAY)
     
-    print(eps_threshold)
+    # print(eps_threshold)
     
     if sample > eps_threshold:
         current_device = list(policy.parameters())[-1].device
@@ -214,7 +214,7 @@ def main(args):
         
         
         if i % args.rollout_interval == 0:
-            adapted_trajectory, adapted_reward, success = rollout_policy(policy, env, render=True)
+            adapted_trajectory, adapted_reward, success = rollout_policy(policy, env)
             LOG.info(f"Task {i} reward: {adapted_reward}")
                 
         
