@@ -231,7 +231,7 @@ def run(args):
 
                 # Sample adapted policy trajectory
                 if train_step_idx % args.rollout_interval == 0:
-                    adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env, render=True)
+                    adapted_trajectory, adapted_reward, success = rollout_policy(f_policy, env)
                     LOG.info(f"Task {train_task_idx} reward: {adapted_reward}")
                     if args.tensorboard:
                         writer.add_scalar(f"adapted_reward/task_{train_task_idx}", adapted_reward, train_step_idx)

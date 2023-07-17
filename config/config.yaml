@@ -17,6 +17,6 @@ outer_batch_size: 256
 inner_batch_size: 256
 rollout_interval: 100
 tensorboard: False
-save_model: False
-save_model_step: 50000
+save_model: True
+save_model_step: 60000
 colab: True
