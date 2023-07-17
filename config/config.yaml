@@ -19,4 +19,4 @@ rollout_interval: 100
 tensorboard: False
 save_model: False
 save_model_step: 50000
-colab: True
+colab: False

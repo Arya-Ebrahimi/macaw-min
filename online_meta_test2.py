@@ -103,7 +103,7 @@ def select_action(state, time, env, policy):
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * time / EPS_DECAY)
     
-    print(eps_threshold)
+    # print(eps_threshold)
     
     if sample > eps_threshold:
         current_device = list(policy.parameters())[-1].device
@@ -148,9 +148,9 @@ def main(args):
         
     policy, vf, task_buffers, q_function = build_networks_and_buffers(args, env, task_config, is_train=False)
     
-    policy.load_state_dict(torch.load(task_config.policy))
-    vf.load_state_dict(torch.load(task_config.vf))
-    q_function.load_state_dict(torch.load(task_config.qf))
+    # policy.load_state_dict(torch.load(task_config.policy))
+    # vf.load_state_dict(torch.load(task_config.vf))
+    # q_function.load_state_dict(torch.load(task_config.qf))
     
     policy_opt, vf_opt, qf_opt, policy_lrs, vf_lrs, qf_lrs = get_opts_and_lrs(args, policy, vf, q_function)
 
@@ -212,7 +212,7 @@ def main(args):
         
         
         if i % args.rollout_interval == 0:
-            adapted_trajectory, adapted_reward, success = rollout_policy(policy, env, render=True)
+            adapted_trajectory, adapted_reward, success = rollout_policy(policy, env)
             LOG.info(f"Task {i} reward: {adapted_reward}")
                 
         
