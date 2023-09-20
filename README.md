@@ -1,4 +1,4 @@
-# Minimal implementation of MACAW (ICML 2021)
+# Enhanced MACAW
 To run the code in the Google colab follow these steps:
 
  
